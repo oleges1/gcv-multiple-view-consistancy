@@ -1,0 +1,5 @@
+validation
+__MACOSX
+.ipynb_checkpoints
+__pycache__
+.DS_Store
