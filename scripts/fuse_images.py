@@ -18,6 +18,8 @@ import gcv_v20211_hw1.utils.sharpf_io as sharpf_io
 from gcv_v20211_hw1.utils.hdf5.dataset import Hdf5File, PreloadTypes
 from gcv_v20211_hw1.fusion.combiners import combine_predictions
 import gcv_v20211_hw1.fusion.interpolators as interpolators
+import warnings
+warnings.filterwarnings("ignore", category=RuntimeWarning) 
 
 HIGH_RES = 0.02
 MED_RES = 0.05
