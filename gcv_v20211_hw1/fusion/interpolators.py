@@ -106,8 +106,8 @@ def pairwise_interpolate_predictions(
         # TODO: compute a flag indicating the possibility to interpolate
         #  by checking distance between `point_from_j` and its `point_from_j_nns`
         #  against the value of `distance_interpolation_threshold`
-        distances_to_nearest = np.abs(point_from_j[:2, None] - point_from_j_nns[None, :])
-        interp_mask[idx] = distances_to_nearest.min() > distance_interpolation_threshold
+        distances_to_nearest = np.abs(point_from_j[-1] - point_from_j_nns)
+        interp_mask[idx] = distances_to_nearest.max() < distance_interpolation_threshold
 
         if interp_mask[idx]:
             # Actually perform interpolation
