@@ -124,9 +124,9 @@ def pairwise_interpolate_predictions(
                                                         distances_i[point_2d_ids[0], point_2d_ids[1]], kind='linear')
                     distances_j_interp[idx] = interpolator(point_from_j[0], point_from_j[1])
                 elif interpolation == 'spline':
-                    tck, fp, ler, mcg = interpolate.bisplrep(point_2d_ids[0], point_2d_ids[1], 
-                                                        distances_i[point_2d_ids[0], point_2d_ids[1]])
-                    distances_j_interp[idx] = interpolate.bisplev(point_from_j[0], point_from_j[1], tck)
+                    spline = interpolate.fitpack.bisplrep(point_2d_ids[0], point_2d_ids[1], 
+                                                        distances_i[point_2d_ids[0], point_2d_ids[1]], kx=1, ky=1)
+                    distances_j_interp[idx] = interpolate.fitpack.bisplev(point_from_j[0], point_from_j[1], spline)
                 else:
                     raise ValueError("Unknown interpolation")
 
