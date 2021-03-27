@@ -66,6 +66,7 @@ def pairwise_interpolate_predictions(
         indexes_j,
         distance_interpolation_threshold: float = 1.0,
         nn_set_size: int = 4,
+        interpolation: str = 'scipy'
 ):
     # Extract view information from input variables
     image_i, distances_i, points_i, pose_i, imaging_i = view_i
@@ -101,12 +102,14 @@ def pairwise_interpolate_predictions(
         # TODO: your code here: use `point_nn_indexes` found previously
         #  and distance values from `image_i` indexed by the same `point_nn_indexes`
         point_2d_ids = np.unravel_index(point_nn_indexes, image_i.shape[:2])
-        point_from_j_nns = image_i[point_2d_ids[0], point_2d_ids[1]]
+        point_from_j_nns = np.empty((nn_set_size, 3))
+        point_from_j_nns[:, :2] = uv_i[point_nn_indexes]
+        point_from_j_nns[:, 2] = image_i[point_2d_ids[0], point_2d_ids[1]]
 
         # TODO: compute a flag indicating the possibility to interpolate
         #  by checking distance between `point_from_j` and its `point_from_j_nns`
         #  against the value of `distance_interpolation_threshold`
-        distances_to_nearest = np.abs(point_from_j[-1] - point_from_j_nns)
+        distances_to_nearest = np.sqrt(((point_from_j[None] - point_from_j_nns) ** 2).sum(axis=1))
         interp_mask[idx] = distances_to_nearest.max() < distance_interpolation_threshold
 
         if interp_mask[idx]:
@@ -116,9 +119,16 @@ def pairwise_interpolate_predictions(
                 #  to construct a bilinear interpolator from distances predicted
                 #  in `view_i` (i.e. `distances_i`) into the point in `view_j`.
                 #  Use the interpolator to compute an interpolated distance value.
-                interpolator = interpolate.interp2d(point_2d_ids[0], point_2d_ids[1], 
-                                                    distances_i[point_2d_ids[0], point_2d_ids[1]], kind='linear')
-                distances_j_interp[idx] = interpolator(point_from_j[0], point_from_j[1])
+                if interpolation == 'scipy':
+                    interpolator = interpolate.interp2d(point_2d_ids[0], point_2d_ids[1], 
+                                                        distances_i[point_2d_ids[0], point_2d_ids[1]], kind='linear')
+                    distances_j_interp[idx] = interpolator(point_from_j[0], point_from_j[1])
+                elif interpolation == 'spline':
+                    tck, fp, ler, mcg = interpolate.bisplrep(point_2d_ids[0], point_2d_ids[1], 
+                                                        distances_i[point_2d_ids[0], point_2d_ids[1]])
+                    distances_j_interp[idx] = interpolate.bisplev(point_from_j[0], point_from_j[1], tck)
+                else:
+                    raise ValueError("Unknown interpolation")
 
             except ValueError as e:
                 print('Error while interpolating point {idx}:'

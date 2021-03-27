@@ -10,6 +10,7 @@ def combine_predictions(
         list_predictions: List[np.array],
         list_indexes_in_whole: List[np.array],
         list_points: List[np.array],
+        combine_function: str = 'min'
 ) -> Tuple[np.array, Mapping]:
 
     """Given a point cloud with more than one distance-to-feature
@@ -34,6 +35,14 @@ def combine_predictions(
 
     # step 2: consolidate predictions
     for idx, values in predictions_variants.items():
-        fused_predictions[idx] = np.min(values)
+        if combine_function == 'min':
+            fused_predictions[idx] = np.min(values)
+        elif combine_function == 'min_smoothed':
+            sorted_values == np.sort(values)[:-5]
+            weights = np.logspace(0, 2, len(sorted_values), endpoint=True)
+            weights = weights / weights.sum()
+            fused_predictions[idx] = np.sum(sorted_values * weights)
+        else:
+            raise ValueError('Uknown combine_function')
 
     return fused_predictions, predictions_variants

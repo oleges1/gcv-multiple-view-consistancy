@@ -90,7 +90,9 @@ def main(options):
         gt_extrinsics,
         gt_intrinsics,
         nn_set_size=options.nn_set_size,
-        distance_interpolation_threshold=threshold)
+        distance_interpolation_threshold=threshold,
+        interpolation=options.interpolation_function
+    )
 
     # Now that we have obtained a set of predictions per each individual point,
     # we can combine distance-to-feature predictions into a consolidated
@@ -102,12 +104,20 @@ def main(options):
             n_points,
             list_predictions,
             list_indexes_in_whole,
-            list_points)
+            list_points,
+            combine_function=options.combine_function
+        )
 
     # save point cloud with predicted distance-to-feature values to an output file
     pred_output_filename = os.path.join(
         options.output_dir,
-        '{}__{}.hdf5'.format(name, 'interpolated'))
+        '{}__{}{}{}.hdf5'.format(
+            name, 
+            'interpolated', 
+            '' if options.interpolation_function == 'scipy' else '_' + options.interpolation_function,
+            '' if options.combine_function == 'min' else '_' + options.combine_function
+        )
+    )
     print('Saving predictions to {}'.format(pred_output_filename))
     sharpf_io.save_full_model_predictions(
         fused_points_gt,
@@ -127,8 +137,9 @@ def parse_args():
                         help='Number of neighbors used for interpolation.')
     parser.add_argument('-r', '--resolution_3d', dest='resolution_3d', required=False, default=MED_RES, type=float,
                         help='3D resolution of scans.')
-    parser.add_argument('-f', '--distance_interp_factor', dest='distance_interp_factor', required=False, type=float, default=6.,
-                        help='distance_interp_factor * resolution_3d is the distance_interpolation_threshold')
+    parser.add_argument('-f', '--distance_interp_factor', dest='distance_interp_factor', required=False, type=float, default=6., help='distance_interp_factor * resolution_3d is the distance_interpolation_threshold')
+    parser.add_argument('-i', '--interpolation_function', dest='interpolation_function', required=False, type=str, default='scipy', help='interpolation function: scipy or spline')
+    parser.add_argument('-c', '--combine_function', dest='combine_function', required=False, type=str, default='min', help='Combine function: simple min or smoothed one')
     return parser.parse_args()
 
 
