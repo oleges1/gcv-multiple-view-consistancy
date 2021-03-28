@@ -38,7 +38,7 @@ def combine_predictions(
         if combine_function == 'min':
             fused_predictions[idx] = np.min(values)
         elif combine_function == 'min_smoothed':
-            sorted_values == np.sort(values)[-5:]
+            sorted_values = np.sort(values)[-5:]
             weights = np.logspace(0, 2, len(sorted_values), endpoint=True)
             weights = weights / weights.sum()
             fused_predictions[idx] = np.sum(sorted_values * weights)
